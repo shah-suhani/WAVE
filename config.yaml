@@ -1,0 +1,19 @@
+data_root: "data/FlatVel-A"
+
+batch_size: 8
+num_epochs: 50
+learning_rate_g: 0.0002
+learning_rate_d: 0.0002
+lambda_l1: 100
+seed: 42
+
+seismic_channels: 5
+velocity_channels: 1
+target_height: 70
+target_width: 70
+
+checkpoint_dir: "checkpoints"
+checkpoint_save_every: 10
+checkpoint_path: null
+
+output_dir: "outputs"
