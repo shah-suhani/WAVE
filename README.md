@@ -118,6 +118,21 @@ python src/visualize.py
 
 Saves comparison plots to the `outputs/` directory. Each plot includes the seismic input, ground-truth velocity map, and predicted velocity map.
 
+## Results
+
+Trained for 20 epochs on 24,000 samples from OpenFWI FlatVel-A
+(6,000 held-out validation samples).
+
+| Metric | Value |
+|--------|-------|
+| Val L1 (normalised) | 0.081 |
+| Val MSE (normalised) | 0.021 |
+| Val SSIM | 0.71 |
+| Best Val L1 (normalised) | 0.055 |
+
+![Training Curves](results/training_curves.png)
+![Predictions](results/predictions.png)
+
 ## Limitations
 
 This project is limited to the OpenFWI FlatVel-A dataset, which contains synthetic flat-layered velocity models. 
