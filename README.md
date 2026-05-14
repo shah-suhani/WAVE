@@ -1,87 +1,62 @@
 # WAVE - Waveform Analysis and Velocity Estimation
 
-WAVE is a deep learning project that explores the reconstruction of subsurface velocity maps from seismic shot-gather data.
+A deep learning project for reconstructing subsurface velocity maps from seismic shot-gather data, using a VelocityGAN-style model trained on the OpenFWI FlatVel-A benchmark dataset.
 
-The project is based on Full Waveform Inversion (FWI), where the goal is to estimate subsurface velocity structures from observed seismic wave data. In this repository, we treat the problem as a supervised learning task and use a VelocityGAN-style model trained on the OpenFWI FlatVel-A benchmark dataset.
 
 ## Problem Statement
 
-Full Waveform Inversion is used to estimate subsurface properties, such as seismic velocity, from recorded seismic waveforms. Traditional FWI methods can be accurate, but they are computationally expensive and depend on careful physical modeling.
+Full Waveform Inversion (FWI) estimates subsurface velocity structures from recorded seismic waveforms. Traditional FWI is computationally expensive and requires careful physical modeling. This project takes a data-driven approach where a neural network learns the seismic-to-velocity mapping directly from examples.
 
-This project explores a data-driven approach where a neural network learns the mapping directly from examples:
-
-```text
-seismic shot-gather data -> velocity map
-```
-
-Given:
-
-* **Input:** seismic shot-gather data
-  `(5 sources x 1 component x 1000 time steps x 70 receivers)`
-
-* **Output:** 2D velocity map
-  `(70 x 70 spatial grid)`
+- **Input:** seismic shot-gather data `(5 sources x 1000 time steps x 70 receivers)`
+- **Output:** 2D velocity map `(70 x 70 spatial grid)`
 
 
 ## Dataset
 
-This project uses the **OpenFWI FlatVel-A** dataset.
+**OpenFWI FlatVel-A** is a synthetic benchmark dataset of flat-layered velocity models with corresponding seismic shot-gather data.
 
-OpenFWI FlatVel-A is a synthetic benchmark dataset for Full Waveform Inversion. It contains flat-layered velocity models and corresponding seismic shot-gather data generated from those models.
-
-Dataset source:
-[https://openfwi-lanl.github.io/](https://openfwi-lanl.github.io/)
-
-The dataset needs to be downloaded separately from the official OpenFWI source.
-
-Dataset details used in this project:
-
-* **Dataset:** OpenFWI FlatVel-A
-* **Input:** seismic shot-gather data
-* **Target:** subsurface velocity map
-* **Velocity models:** synthetic flat-layered structures
-* **Velocity range:** approximately 1500 to 4500 m/s
-
+- Source: [https://openfwi-lanl.github.io/](https://openfwi-lanl.github.io/)
+- Velocity range: 1500 to 4500 m/s
+- Training samples: 24,000 | Validation samples: 6,000
 
 ## Approach
 
-We use a VelocityGAN-style setup for seismic velocity reconstruction.
+The model uses a VelocityGAN-style setup with supervised training:
 
-The main components are:
+- **Generator:** CNN encoder-decoder that maps seismic input to a velocity map
+- **Discriminator:** CNN that classifies velocity maps as real or generated
+- **Loss:** L1 reconstruction loss combined with adversarial loss (BCE)
 
-* **Generator:** a CNN encoder-decoder model that maps seismic input to a velocity map
-* **Discriminator:** a CNN model that classifies velocity maps as real or generated
-* **Loss:** a combination of reconstruction loss (L1) and adversarial loss (BCE)
+## Repository Structure
 
-The training is supervised because ground-truth velocity maps are available for the seismic inputs.
-
+```
+WAVE/
+├── README.md
+├── requirements.txt
+├── config.yaml
+├── .gitignore
+├── results/
+│   ├── predictions.png
+│   └── training_curves.png
+└── src/
+    ├── dataset.py
+    ├── models.py
+    ├── train.py
+    ├── evaluate.py
+    └── visualize.py
+```
 
 ## Setup
 
-### 1. Clone the repository
-
 ```bash
-git clone https://github.com/<your-username>/WAVE.git
+git clone https://github.com/shah-suhani/WAVE.git
 cd WAVE
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Prepare the dataset
+Download FlatVel-A from [OpenFWI](https://openfwi-lanl.github.io/) and organize as:
 
-Download the FlatVel-A dataset from the official OpenFWI website:
-
-[https://openfwi-lanl.github.io/](https://openfwi-lanl.github.io/)
-
-After downloading, place the dataset locally and update the `data_root` field in `config.yaml`.
-
-Expected Structure:
-
-```text
+```
 data/
 └── FlatVel-A/
     ├── train/
@@ -92,6 +67,7 @@ data/
         └── velocity/
 ```
 
+Update `data_root` in `config.yaml` to point to your local data folder.
 
 ## Training
 
@@ -99,7 +75,8 @@ data/
 python src/train.py
 ```
 
-Training settings can be changed in `config.yaml`. Checkpoints are saved in the `checkpoints/` directory.
+All hyperparameters are in `config.yaml`. Checkpoints are saved to `checkpoints/` automatically.
+
 
 ## Evaluation
 
@@ -107,7 +84,7 @@ Training settings can be changed in `config.yaml`. Checkpoints are saved in the 
 python src/evaluate.py
 ```
 
-Computes L1 loss, MSE, and optionally SSIM on the validation set. Requires a saved checkpoint; update `checkpoint_path` in `config.yaml`.
+Computes L1, MSE, and SSIM on the validation set. Set `checkpoint_path` in `config.yaml` before running.
 
 
 ## Visualization
@@ -116,12 +93,11 @@ Computes L1 loss, MSE, and optionally SSIM on the validation set. Requires a sav
 python src/visualize.py
 ```
 
-Saves comparison plots to the `outputs/` directory. Each plot includes the seismic input, ground-truth velocity map, and predicted velocity map.
+Saves side-by-side plots of seismic input, ground truth, and predicted velocity maps to `outputs/`.
 
 ## Results
 
-Trained for 20 epochs on 24,000 samples from OpenFWI FlatVel-A
-(6,000 held-out validation samples).
+Trained for 20 epochs on 24,000 samples (6,000 validation samples).
 
 | Metric | Value |
 |--------|-------|
@@ -131,8 +107,10 @@ Trained for 20 epochs on 24,000 samples from OpenFWI FlatVel-A
 | Best Val L1 (normalised) | 0.055 |
 
 ![Training Curves](results/training_curves.png)
+
 ![Predictions](results/predictions.png)
 
 ## Limitations
 
-This project is limited to the OpenFWI FlatVel-A dataset, which contains synthetic flat-layered velocity models. 
+- Trained only on FlatVel-A (flat-layered synthetic models)
+- Does not generalize to curved or complex velocity structures
